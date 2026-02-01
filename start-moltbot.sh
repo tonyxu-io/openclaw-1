@@ -214,6 +214,7 @@ if (process.env.SLACK_BOT_TOKEN && process.env.SLACK_APP_TOKEN) {
 const baseUrl = (process.env.AI_GATEWAY_BASE_URL || process.env.ANTHROPIC_BASE_URL || '').replace(/\/+$/, '');
 const isOpenAI = baseUrl.endsWith('/openai');
 
+/*
 if (isOpenAI) {
     // Create custom openai provider config with baseUrl override
     // Omit apiKey so moltbot falls back to OPENAI_API_KEY env var
@@ -263,6 +264,31 @@ if (isOpenAI) {
     // Default to Anthropic without custom base URL (uses built-in pi-ai catalog)
     config.agents.defaults.model.primary = 'anthropic/claude-opus-4-5';
 }
+*/
+
+console.log('Applying user-provided azure-codex provider config');
+config.models = config.models || {};
+config.models.providers = config.models.providers || {};
+config.models.providers['azure-codex'] = {
+  "baseUrl": "https://yihan-ml0as4mr-eastus2.openai.azure.com/openai/v1",
+  "apiKey": process.env.AZURE_API_KEY || '',
+  "api": "openai-responses",
+  "models": [
+    {
+      "id": "gpt-5.2-codex",
+      "name": "GPT-5.2 Codex",
+      "api": "openai-responses",
+      "reasoning": false,
+      "input": [
+        "text"
+      ]
+    }
+  ]
+};
+// Add model to allowlist and set as primary
+config.agents.defaults.models = config.agents.defaults.models || {};
+config.agents.defaults.models['azure-codex/gpt-5.2-codex'] = { alias: 'GPT-5.2 Codex' };
+config.agents.defaults.model.primary = 'azure-codex/gpt-5.2-codex';
 
 // Write updated config
 fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
